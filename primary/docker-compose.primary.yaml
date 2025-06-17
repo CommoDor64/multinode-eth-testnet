@@ -8,7 +8,7 @@ services:
     volumes:
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/genesis.json:/genesis.json:ro
-    command: sh -c "geth init --datadir /datadir /genesis.json"
+    command: ["sh", "-c", "geth init --datadir /datadir /genesis.json"]
 
   geth:
     depends_on:
@@ -39,6 +39,9 @@ services:
     ]
 
   beacon:
+    depends_on:
+      geth:
+        condition: service_completed_successfully
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
     container_name: beacon
     network_mode: "host"
@@ -65,6 +68,9 @@ services:
     ]
 
   validator:
+    depends_on:
+      beacon:
+        condition: service_completed_successfully
     image: gcr.io/offchainlabs/prysm/validator:stable
     container_name: validator
     network_mode: "host"
