@@ -9,8 +9,6 @@ services:
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/genesis.json:/genesis.json:ro
     command: sh -c "geth init --datadir /datadir /genesis.json"
-    networks:
-      - ethereum-network
 
   geth:
     depends_on:
@@ -39,8 +37,6 @@ services:
       "--allow-insecure-unlock",
       "--password", "/password.txt"
     ]
-    networks:
-      - ethereum-network
 
   beacon:
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
@@ -67,8 +63,6 @@ services:
       "--http-host=0.0.0.0",
       "--accept-terms-of-use"
     ]
-    networks:
-      - ethereum-network
 
   validator:
     image: gcr.io/offchainlabs/prysm/validator:stable
@@ -87,6 +81,4 @@ services:
       "--wallet-dir=/wallet",
       "--wallet-password-file=/password.txt"
     ]
-    networks:
-      - ethereum-network
 
