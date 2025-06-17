@@ -4,6 +4,7 @@ services:
   geth-init:
     image: ethereum/client-go
     container_name: geth-init
+    network_mode: "host"
     volumes:
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/genesis.json:/genesis.json:ro
@@ -17,6 +18,7 @@ services:
         condition: service_completed_successfully
     image: ethereum/client-go
     container_name: geth
+    network_mode: "host"
     ports:
       - "30303:30303"
       - "8545:8545"
@@ -43,6 +45,7 @@ services:
   beacon:
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
     container_name: beacon
+    network_mode: "host"
     ports:
       - "4000:4000"
       - "13000:13000"
@@ -86,8 +89,4 @@ services:
     ]
     networks:
       - ethereum-network
-
-networks:
-  ethereum-network:
-    driver: bridge
 
