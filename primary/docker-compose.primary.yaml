@@ -22,13 +22,12 @@ services:
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/password.txt:/password.txt:ro
     command: [
+      "--networkid", "3151908",  
       "--http",
       "--http.api", "admin,debug,eth,net,web3,engine",
       "--authrpc.jwtsecret=/jwtsecret",
       "--datadir", "/datadir",
-      "--nodiscover",
       "--syncmode", "full",
-      "--allow-insecure-unlock",
       "--password", "/password.txt",
       "--http.addr", "0.0.0.0",
       "--authrpc.addr", "0.0.0.0",

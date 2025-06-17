@@ -24,10 +24,12 @@ services:
     command: [
       "--networkid", "3151908",
       "--http",
-      "--http.api", "eth,net,web3,engine",
+      "--http.api", "debug,admin,eth,net,web3,engine",
       "--authrpc.jwtsecret=/jwtsecret",
       "--datadir", "/datadir",
-      "--password", "/password.txt"
+      "--password", "/password.txt",
+      "--bootnodes", "${BOOT_ENODE}",
+      "--syncmode", "full",
     ]
 
   beacon:
