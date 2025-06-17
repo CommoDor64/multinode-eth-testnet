@@ -7,7 +7,7 @@ services:
     network_mode: "host"
     volumes:
       - /home/ethereum/execution/datadir:/datadir
-      - /home/ethereum/execution/genesis.json:/genesis.json
+      - /home/ethereum/execution/genesis.json:/genesis.json:ro
     command: ["init", "--datadir", "/datadir", "/genesis.json"]
 
   geth:
@@ -22,23 +22,21 @@ services:
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/password.txt:/password.txt:ro
     command: [
+      "--networkid", "3151908",
       "--http",
-      "--http.api", "admin,debug,eth,net,web3,engine",
+      "--http.api", "eth,net,web3,engine",
       "--authrpc.jwtsecret=/jwtsecret",
       "--datadir", "/datadir",
-      "--nodiscover",
-      "--syncmode", "full",
-      "--allow-insecure-unlock",
-      "--password", "/password.txt",
-      "--http.addr", "0.0.0.0",
-      "--authrpc.addr", "0.0.0.0",
-      "--authrpc.port", "8551"
+      "--password", "/password.txt"
     ]
 
   beacon:
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
     container_name: beacon
     network_mode: "host"
+    environment:
+      - BOOTSTRAP_IP=${BOOTSTRAP_IP}
+      - NODE_ID=${NODE_ID}
     volumes:
       - /home/ethereum/consensus/datadir:/datadir
       - /home/ethereum/jwtsecret:/jwtsecret:ro
@@ -46,32 +44,11 @@ services:
       - /home/ethereum/consensus/config.yml:/config/config.yml:ro
     command: [
       "--datadir=/datadir",
-      "--execution-endpoint=http://localhost:8551",
-      "--jwt-secret=/jwtsecret",
       "--genesis-state=/genesis/genesis.ssz",
+      "--bootstrap-node", "/ip4/${BOOTSTRAP_IP}/udp/13000/quic-v1/p2p/${NODE_ID}",
+      "--peer", "/ip4/${BOOTSTRAP_IP}/udp/13000/quic-v1/p2p/${NODE_ID}",
+      "--execution-endpoint=http://127.0.0.1:8551",
+      "--jwt-secret=/jwtsecret",
       "--chain-config-file=/config/config.yml",
-      "--min-sync-peers=0",
-      "--bootstrap-node=",
-      "--rpc-host=0.0.0.0",
-      "--http-host=0.0.0.0",
-      "--accept-terms-of-use"
+      "--min-sync-peers=1"
     ]
-
-  validator:
-    image: gcr.io/offchainlabs/prysm/validator:stable
-    container_name: validator
-    network_mode: "host"
-    volumes:
-      - /home/ethereum/validator/datadir:/datadir
-      - /home/ethereum/consensus/config.yml:/config/config.yml:ro
-      - /home/ethereum/validator/validator_wallet:/wallet
-      - /home/ethereum/validator/password.txt:/password.txt:ro
-    command: [
-      "--datadir=/datadir",
-      "--beacon-rpc-provider=localhost:4000",
-      "--chain-config-file=/config/config.yml",
-      "--accept-terms-of-use",
-      "--wallet-dir=/wallet",
-      "--wallet-password-file=/password.txt"
-    ]
-

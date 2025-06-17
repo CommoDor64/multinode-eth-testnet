@@ -26,6 +26,7 @@ prompt_for_ip() {
 }
 
 get_primary_enode() {
+    mkdir -p "${EXEC_DIR}/datadir" 
     local primary_ip="$PRIMARY_NODE_IP"
     curl -X POST \
          -H "Content-Type: application/json" \
