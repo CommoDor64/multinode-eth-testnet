@@ -50,5 +50,6 @@ services:
       "--execution-endpoint=http://127.0.0.1:8551",
       "--jwt-secret=/jwtsecret",
       "--chain-config-file=/config/config.yml",
-      "--min-sync-peers=1"
+      "--min-sync-peers=1",
+      "--accept-terms-of-use"
     ]
