@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  geth:
+    image: ethereum/client-go
+    container_name: geth
+    ports:
+      - "30303:30303"
+      - "8545:8545"
+      - "8551:8551"
+    volumes:
+      - /home/ethereum/jwtsecret:/jwtsecret:ro
+      - /home/ethereum/execution/datadir:/datadir
+      - /home/ethereum/execution/password.txt:/password.txt:ro
+    command: [
+      "--http",
+      "--http.api", "admin,debug,eth,net,web3,engine",
+      "--authrpc.jwtsecret=/jwtsecret",
+      "--datadir", "/datadir",
+      "--nodiscover",
+      "--syncmode", "full",
+      "--allow-insecure-unlock",
+      "--password", "/password.txt"
+    ]
+
+  beacon:
+    image: gcr.io/offchainlabs/prysm/beacon-chain:stable
+    container_name: beacon
+    ports:
+      - "4000:4000"
+      - "13000:13000"
+      - "12000:12000/udp"
+    volumes:
+      - /home/ethereum/consensus/datadir:/datadir
+      - /home/ethereum/jwtsecret:/jwtsecret:ro
+      - /home/ethereum/consensus/genesis.ssz:/genesis/genesis.ssz:ro
+      - /home/ethereum/consensus/config.yml:/config/config.yml:ro
+    command: [
+      "--datadir=/datadir",
+      "--execution-endpoint=http://geth:8551",
+      "--jwt-secret=/jwtsecret",
+      "--genesis-state=/genesis/genesis.ssz",
+      "--chain-config-file=/config/config.yml",
+      "--min-sync-peers=0",
+      "--bootstrap-node=",
+      "--rpc-host=0.0.0.0",
+      "--http-host=0.0.0.0",
+      "--accept-terms-of-use"
+    ]
+
+  validator:
+    image: gcr.io/offchainlabs/prysm/validator:stable
+    container_name: validator
+    network_mode: "host"
+    volumes:
+      - /home/ethereum/validator/datadir:/datadir
+      - /home/ethereum/consensus/config.yml:/config/config.yml:ro
+      - /home/ethereum/validator/validator_wallet:/wallet
+      - /home/ethereum/validator/password.txt:/password.txt:ro
+    command: [
+      "--datadir=/datadir",
+      "--beacon-rpc-provider=beacon:4000",
+      "--chain-config-file=/config/config.yml",
+      "--accept-terms-of-use",
+      "--wallet-dir=/wallet",
+      "--wallet-password-file=/password.txt"
+    ]
+
