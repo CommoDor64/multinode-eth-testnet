@@ -1,7 +1,20 @@
 version: '3.8'
 
 services:
+  geth-init:
+    image: ethereum/client-go
+    container_name: geth-init
+    volumes:
+      - /home/ethereum/execution/datadir:/datadir
+      - /home/ethereum/execution/genesis.json:/genesis.json:ro
+    command: sh -c "geth init --datadir /datadir /genesis.json"
+    networks:
+      - ethereum-network
+
   geth:
+    depends_on:
+      geth-init:
+        condition: service_completed_successfully
     image: ethereum/client-go
     container_name: geth
     ports:
@@ -15,6 +28,8 @@ services:
     command: [
       "--http",
       "--http.api", "admin,debug,eth,net,web3,engine",
+      "--http.addr", "0.0.0.0",
+      "--http.vhosts", "*",
       "--authrpc.jwtsecret=/jwtsecret",
       "--datadir", "/datadir",
       "--nodiscover",
@@ -22,6 +37,8 @@ services:
       "--allow-insecure-unlock",
       "--password", "/password.txt"
     ]
+    networks:
+      - ethereum-network
 
   beacon:
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
@@ -47,6 +64,8 @@ services:
       "--http-host=0.0.0.0",
       "--accept-terms-of-use"
     ]
+    networks:
+      - ethereum-network
 
   validator:
     image: gcr.io/offchainlabs/prysm/validator:stable
@@ -65,4 +84,10 @@ services:
       "--wallet-dir=/wallet",
       "--wallet-password-file=/password.txt"
     ]
+    networks:
+      - ethereum-network
+
+networks:
+  ethereum-network:
+    driver: bridge
 
