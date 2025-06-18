@@ -3,11 +3,10 @@ version: '3.8'
 services:
   geth-init:
     image: ethereum/client-go
-    container_name: geth-init
-    network_mode: "host"
+    network_mode: host
     volumes:
       - /home/ethereum/execution/datadir:/datadir
-      - /home/ethereum/execution/genesis.json:/genesis.json
+      - /home/ethereum/execution/genesis.json:/genesis.json:ro
     command: ["init", "--datadir", "/datadir", "/genesis.json"]
 
   geth:
@@ -15,63 +14,70 @@ services:
       geth-init:
         condition: service_completed_successfully
     image: ethereum/client-go
+    network_mode: host
     container_name: geth
-    network_mode: "host"
     volumes:
       - /home/ethereum/jwtsecret:/jwtsecret:ro
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/password.txt:/password.txt:ro
     command: [
-      "--networkid", "3151908",  
+      "--networkid",      "3151908",
+      "--datadir",        "/datadir",
+      "--syncmode",       "full",
+      "--port",           "30303",
+      "--discovery.port", "30303",
+      "--nat",            "extip:46.62.143.87",
       "--http",
-      "--http.api", "admin,debug,eth,net,web3,engine",
+      "--http.addr",      "0.0.0.0",
+      "--http.api",       "admin,debug,eth,net,web3,engine",
+      "--authrpc.addr",   "0.0.0.0",
+      "--authrpc.port",   "8551",
       "--authrpc.jwtsecret=/jwtsecret",
-      "--datadir", "/datadir",
-      "--password", "/password.txt",
-      "--http.addr", "0.0.0.0",
-      "--authrpc.addr", "0.0.0.0",
-      "--authrpc.port", "8551",
-      "--syncmode", "full"
+      "--password",       "/password.txt"
     ]
 
   beacon:
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
+    network_mode: host
     container_name: beacon
-    network_mode: "host"
     volumes:
       - /home/ethereum/consensus/datadir:/datadir
-      - /home/ethereum/jwtsecret:/jwtsecret:ro
       - /home/ethereum/consensus/genesis.ssz:/genesis/genesis.ssz:ro
       - /home/ethereum/consensus/config.yml:/config/config.yml:ro
+      - /home/ethereum/jwtsecret:/jwtsecret:ro
     command: [
       "--datadir=/datadir",
       "--genesis-state=/genesis/genesis.ssz",
+      "--chain-config-file=/config/config.yml",
       "--execution-endpoint=http://localhost:8551",
       "--jwt-secret=/jwtsecret",
-      "--chain-config-file=/config/config.yml",
-      "--min-sync-peers=1",
+      "--chain-id=3151908",
+      "--contract-deployment-block=0",
+      "--min-sync-peers=0",
+      "--minimum-peers-per-subnet=0",
+      "--p2p-host-ip=46.62.143.87",
+      "--bootstrap-node=",
       "--rpc-host=0.0.0.0",
       "--http-host=0.0.0.0",
       "--subscribe-all-subnets",
-      "--accept-terms-of-use",
-      "--bootstrap-node="
+      "--accept-terms-of-use"
     ]
 
-  validator:
-    image: gcr.io/offchainlabs/prysm/validator:stable
-    container_name: validator
-    network_mode: "host"
-    volumes:
-      - /home/ethereum/validator/datadir:/datadir
-      - /home/ethereum/consensus/config.yml:/config/config.yml:ro
-      - /home/ethereum/validator/validator_wallet:/wallet
-      - /home/ethereum/validator/password.txt:/password.txt:ro
-    command: [
-      "--datadir=/datadir",
-      "--beacon-rpc-provider=localhost:4000",
-      "--chain-config-file=/config/config.yml",
-      "--accept-terms-of-use",
-      "--wallet-dir=/wallet",
-      "--wallet-password-file=/password.txt"
-    ]
+  #  validator:
+  #    image: gcr.io/offchainlabs/prysm/validator:stable
+  #    network_mode: host
+  #    container_name: validator
+  #    volumes:
+  #      - /home/ethereum/validator/datadir:/datadir
+  #      - /home/ethereum/validator/validator_wallet:/wallet
+  #      - /home/ethereum/validator/password.txt:/password.txt:ro
+  #      - /home/ethereum/consensus/config.yml:/config/config.yml:ro
+  #    command: [
+  #      "--datadir=/datadir",
+  #      "--wallet-dir=/wallet",
+  #      "--wallet-password-file=/password.txt",
+  #      "--beacon-rpc-provider=localhost:4000",
+  #      "--chain-config-file=/config/config.yml",
+  #      "--accept-terms-of-use"
+  #    ]
 

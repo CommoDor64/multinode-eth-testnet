@@ -3,8 +3,7 @@ version: '3.8'
 services:
   geth-init:
     image: ethereum/client-go
-    container_name: geth-init
-    network_mode: "host"
+    network_mode: host
     volumes:
       - /home/ethereum/execution/datadir:/datadir
       - /home/ethereum/execution/genesis.json:/genesis.json:ro
@@ -15,48 +14,59 @@ services:
       geth-init:
         condition: service_completed_successfully
     image: ethereum/client-go
+    network_mode: host
     container_name: geth
-    network_mode: "host"
     volumes:
-      - /home/ethereum/jwtsecret:/jwtsecret:ro
       - /home/ethereum/execution/datadir:/datadir
+      - /home/ethereum/jwtsecret:/jwtsecret:ro
       - /home/ethereum/execution/password.txt:/password.txt:ro
     command: [
-      "--networkid", "3151908",
+      "--networkid",      "3151908",
+      "--datadir",        "/datadir",
+      "--syncmode",       "full",
+      "--gcmode",         "archive",
+      "--snapshot=false",
+      "--port",           "30303",
+      "--discovery.port", "30303",
+      "--nat",            "extip:${SYNC_IP}",
+      "--bootnodes",      "${BOOT_ENODE}",
       "--http",
-      "--http.api", "debug,admin,eth,net,web3,engine",
+      "--http.addr",      "0.0.0.0",
+      "--http.api",       "admin,debug,eth,net,web3,engine",
+      "--authrpc.addr",   "0.0.0.0",
+      "--authrpc.port",   "8551",
       "--authrpc.jwtsecret=/jwtsecret",
-      "--datadir", "/datadir",
-      "--password", "/password.txt",
-      "--http.addr", "0.0.0.0",
-      "--authrpc.addr", "0.0.0.0",
-      "--authrpc.port", "8551",
-      "--bootnodes", "${BOOT_ENODE}",
-      "--syncmode", "full"
+      "--password",       "/password.txt"
     ]
 
   beacon:
     image: gcr.io/offchainlabs/prysm/beacon-chain:stable
+    network_mode: host
     container_name: beacon
-    network_mode: "host"
     environment:
-      - BOOTSTRAP_IP=${BOOTSTRAP_IP}
-      - NODE_ID=${NODE_ID}
+      - BOOTSTRAP_ENR=${BOOTSTRAP_ENR}
+      - SYNC_IP=${SYNC_IP}
     volumes:
       - /home/ethereum/consensus/datadir:/datadir
-      - /home/ethereum/jwtsecret:/jwtsecret:ro
       - /home/ethereum/consensus/genesis.ssz:/genesis/genesis.ssz:ro
       - /home/ethereum/consensus/config.yml:/config/config.yml:ro
+      - /home/ethereum/jwtsecret:/jwtsecret:ro
     command: [
       "--datadir=/datadir",
       "--genesis-state=/genesis/genesis.ssz",
+      "--chain-config-file=/config/config.yml",
       "--execution-endpoint=http://127.0.0.1:8551",
       "--jwt-secret=/jwtsecret",
-      "--chain-config-file=/config/config.yml",
+      "--chain-id=3151908",
+      "--contract-deployment-block=0",
       "--min-sync-peers=1",
+      "--minimum-peers-per-subnet=0",
+      "--p2p-host-ip=${SYNC_IP}",
+      "--bootstrap-node=${BOOTSTRAP_ENR}",
+      "--peer=${BOOTSTRAP_ENR}",
       "--rpc-host=0.0.0.0",
       "--http-host=0.0.0.0",
       "--subscribe-all-subnets",
-      "--accept-terms-of-use",
-      "--bootstrap-node", "/ip4/${BOOTSTRAP_IP}/udp/13000/quic-v1/p2p/${NODE_ID}",
+      "--accept-terms-of-use"
     ]
+
