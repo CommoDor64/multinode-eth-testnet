@@ -28,8 +28,11 @@ services:
       "--authrpc.jwtsecret=/jwtsecret",
       "--datadir", "/datadir",
       "--password", "/password.txt",
+      "--http.addr", "0.0.0.0",
+      "--authrpc.addr", "0.0.0.0",
+      "--authrpc.port", "8551",
       "--bootnodes", "${BOOT_ENODE}",
-      "--syncmode", "full",
+      "--syncmode", "full"
     ]
 
   beacon:
@@ -47,11 +50,13 @@ services:
     command: [
       "--datadir=/datadir",
       "--genesis-state=/genesis/genesis.ssz",
-      "--bootstrap-node", "/ip4/${BOOTSTRAP_IP}/udp/13000/quic-v1/p2p/${NODE_ID}",
-      "--peer", "/ip4/${BOOTSTRAP_IP}/udp/13000/quic-v1/p2p/${NODE_ID}",
       "--execution-endpoint=http://127.0.0.1:8551",
       "--jwt-secret=/jwtsecret",
       "--chain-config-file=/config/config.yml",
       "--min-sync-peers=1",
-      "--accept-terms-of-use"
+      "--rpc-host=0.0.0.0",
+      "--http-host=0.0.0.0",
+      "--subscribe-all-subnets",
+      "--accept-terms-of-use",
+      "--bootstrap-node", "/ip4/${BOOTSTRAP_IP}/udp/13000/quic-v1/p2p/${NODE_ID}",
     ]

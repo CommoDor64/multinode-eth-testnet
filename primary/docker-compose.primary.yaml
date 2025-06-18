@@ -27,11 +27,11 @@ services:
       "--http.api", "admin,debug,eth,net,web3,engine",
       "--authrpc.jwtsecret=/jwtsecret",
       "--datadir", "/datadir",
-      "--syncmode", "full",
       "--password", "/password.txt",
       "--http.addr", "0.0.0.0",
       "--authrpc.addr", "0.0.0.0",
-      "--authrpc.port", "8551"
+      "--authrpc.port", "8551",
+      "--syncmode", "full"
     ]
 
   beacon:
@@ -45,15 +45,16 @@ services:
       - /home/ethereum/consensus/config.yml:/config/config.yml:ro
     command: [
       "--datadir=/datadir",
+      "--genesis-state=/genesis/genesis.ssz",
       "--execution-endpoint=http://localhost:8551",
       "--jwt-secret=/jwtsecret",
-      "--genesis-state=/genesis/genesis.ssz",
       "--chain-config-file=/config/config.yml",
-      "--min-sync-peers=0",
-      "--bootstrap-node=",
+      "--min-sync-peers=1",
       "--rpc-host=0.0.0.0",
       "--http-host=0.0.0.0",
-      "--accept-terms-of-use"
+      "--subscribe-all-subnets",
+      "--accept-terms-of-use",
+      "--bootstrap-node="
     ]
 
   validator:
